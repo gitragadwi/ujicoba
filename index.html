@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Rekapitulasi Festival Inovasi</title>
+  <title>Form Input Penilaian Juri — Festival Inovasi</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -52,6 +52,39 @@
     }
     .btn-refresh:hover { background: #fee2e2; }
 
+    .juri-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .juri-select-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+    .juri-select-wrap label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .juri-info {
+      font-size: 12px;
+      color: var(--muted);
+      background: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
     .sheet-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -77,12 +110,12 @@
 
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 16px;
     }
     @media (max-width: 768px) {
-      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kpi-grid { grid-template-columns: repeat(1, minmax(0, 1fr)); }
     }
     .kpi-card {
       background: var(--card);
@@ -92,17 +125,8 @@
     }
     .kpi-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
     .kpi-value { font-size: 26px; font-weight: 700; margin-top: 4px; color: var(--text); }
-    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-    @media (max-width: 850px) {
-      .charts-grid { grid-template-columns: minmax(0, 1fr); }
-    }
     .panel {
       background: var(--card);
       border: 1px solid var(--border);
@@ -110,8 +134,16 @@
       padding: 18px 20px;
       margin-bottom: 16px;
     }
-    .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
-    .chart-box { position: relative; height: 240px; width: 100%; }
+    .panel-head {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .panel-title { font-size: 15px; font-weight: 700; }
+    .hint-text { font-size: 12px; color: var(--muted); }
 
     .toolbar {
       display: flex;
@@ -130,31 +162,30 @@
     }
     .table-wrap { overflow-x: auto; max-height: 620px; overflow-y: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 9px 11px; border-bottom: 1px solid var(--border); text-align: left; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
     th { background: #f1f5f9; font-weight: 700; position: sticky; top: 0; z-index: 1; }
     th.center, td.center { text-align: center; }
     tr:hover td { background: #fafafa; }
-    .pill-cat {
-      background: #eff6ff;
-      color: var(--accent);
-      padding: 3px 8px;
-      border-radius: 5px;
+    tr.row-selected td { background: #f0fdf4; }
+    input.vote-check {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #16a34a;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
       font-size: 11px;
       font-weight: 700;
-      white-space: nowrap;
-    }
-    .check-yes { color: #16a34a; font-weight: 700; font-size: 15px; }
-    .check-no { color: #cbd5e1; font-size: 14px; }
-    .score-pill {
-      display: inline-block;
-      min-width: 26px;
-      text-align: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-weight: 700;
       background: #f1f5f9;
+      color: #475569;
     }
-    .score-high { background: #dcfce7; color: #166534; }
+    .status-pill.picked {
+      background: #dcfce7;
+      color: #166534;
+    }
     .footer-row td { background: #fef2f2; font-weight: 700; color: var(--primary); position: sticky; bottom: 0; }
     .error-banner {
       display: none;
@@ -171,87 +202,76 @@
 <body>
   <div class="header">
     <div>
-      <h1>Dashboard Rekapitulasi Festival Inovasi</h1>
-      <p id="lastUpdateText">Menghubungkan ke 4 sheet di Google Sheets...</p>
+      <h1>Form Input Penilaian Juri — Festival Inovasi</h1>
+      <p id="lastUpdateText">Menghubungkan ke file Google Sheets juri...</p>
     </div>
     <div class="status-box">
+      <span class="badge" id="saveStatusBadge">Siap</span>
       <span class="badge" id="statusBadge">Memuat data...</span>
-      <button class="btn-refresh" type="button" onclick="loadLiveData()">↻ Refresh Sekarang</button>
+      <button class="btn-refresh" type="button" onclick="loadJuriData()">↻ Refresh Sekarang</button>
     </div>
   </div>
 
-  <div class="sheet-tabs" id="sheetTabs">
-    <button class="tab-btn active" data-sheet="IDE OPD" onclick="selectSheet('IDE OPD')">IDE OPD</button>
-    <button class="tab-btn" data-sheet="AKTIF OPD" onclick="selectSheet('AKTIF OPD')">AKTIF OPD</button>
-    <button class="tab-btn" data-sheet="IDE UNIT" onclick="selectSheet('IDE UNIT')">IDE UNIT</button>
-    <button class="tab-btn" data-sheet="AKTIF UNIT" onclick="selectSheet('AKTIF UNIT')">AKTIF UNIT</button>
-    <button class="tab-btn" data-sheet="SEMUA" onclick="selectSheet('SEMUA')">Semua Sheet</button>
+  <div class="juri-bar">
+    <div class="juri-select-wrap">
+      <label for="juriSelect">Pilih Penilai / Juri:</label>
+      <select id="juriSelect" onchange="onJuriChange()" style="min-width: 280px;">
+        <option value="1">1. Dr. Kusuma Adi Achmad, ST.,MT</option>
+        <option value="2">2. Ahmad Ilyas</option>
+        <option value="3">3. Junaenah, S.AP., M.M</option>
+        <option value="4">4. Fahrus Salis</option>
+        <option value="5">5. Ade Asep Syarifudin</option>
+        <option value="6">6. Dwi Agustina, S.Pd.,M.Pd.B.I.,PhD</option>
+        <option value="7">7. Sevina Mahardini, ST.,MT.,M.Sc</option>
+      </select>
+    </div>
+    <div class="juri-info" id="juriScopeText">Kategori: AKTIF OPD &amp; AKTIF UNIT</div>
   </div>
+
+  <div class="sheet-tabs" id="sheetTabs"></div>
 
   <div class="error-banner" id="errorBanner"></div>
 
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Total Inovasi</div>
+      <div class="kpi-label">Total Inovasi Kategori Ini</div>
       <div class="kpi-value" id="kpiTotalInovasi">-</div>
-      <div class="kpi-sub" id="kpiSheetLabel">Sheet: IDE OPD</div>
+      <div class="kpi-sub" id="kpiSheetLabel">Tab: -</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Total Suara Masuk</div>
-      <div class="kpi-value" id="kpiTotalSuara">-</div>
-      <div class="kpi-sub">Akumulasi seluruh penilai</div>
+      <div class="kpi-label">Inovasi Dipilih Juri Ini</div>
+      <div class="kpi-value" id="kpiDipilih">-</div>
+      <div class="kpi-sub">Tercengang pada tab aktif</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Inovasi Terpilih (&ge;1 Suara)</div>
-      <div class="kpi-value" id="kpiTerpilih">-</div>
-      <div class="kpi-sub">Sudah mendapatkan suara</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Suara Tertinggi</div>
-      <div class="kpi-value" id="kpiTertinggi">-</div>
-      <div class="kpi-sub" id="kpiTertinggiNama">Menunggu data...</div>
-    </div>
-  </div>
-
-  <div class="charts-grid">
-    <div class="panel">
-      <div class="panel-title">Perolehan Suara per Inovasi</div>
-      <div class="chart-box"><canvas id="chartInovasi"></canvas></div>
-    </div>
-    <div class="panel">
-      <div class="panel-title">Jumlah Inovasi Dipilih per Penilai</div>
-      <div class="chart-box"><canvas id="chartPenilai"></canvas></div>
+      <div class="kpi-label">Belum Dipilih</div>
+      <div class="kpi-value" id="kpiBelum">-</div>
+      <div class="kpi-sub">Tersisa di daftar inovasi</div>
     </div>
   </div>
 
   <div class="panel">
-    <div class="panel-title" id="tablePanelTitle">Tabel Rekapan — IDE OPD</div>
+    <div class="panel-head">
+      <div class="panel-title" id="tablePanelTitle">Daftar Penilaian Inovasi</div>
+      <div class="hint-text">Centang kotak di kolom Pilih untuk langsung menyimpan ke spreadsheet juri</div>
+    </div>
     <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Cari nama inovasi, OPD/unit, atau pemilih..." style="min-width: 260px; flex: 1;" />
-      <select id="sortSelect">
-        <option value="default">Urutan Sesuai Spreadsheet</option>
-        <option value="suara_desc">Suara Tertinggi ke Terendah</option>
-        <option value="nama_asc">Nama Inovasi (A-Z)</option>
-        <option value="opd_asc">OPD / Unit (A-Z)</option>
+      <input type="text" id="searchInput" placeholder="Cari nama inovasi atau OPD/unit..." style="min-width: 260px; flex: 1;" />
+      <select id="filterSelect">
+        <option value="all">Semua Inovasi</option>
+        <option value="picked">Hanya yang Dipilih (✔)</option>
+        <option value="unpicked">Belum Dipilih (☐)</option>
       </select>
     </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>No</th>
+            <th style="width: 55px;">No</th>
             <th>Nama Inovasi</th>
             <th>OPD / Unit</th>
-            <th class="center">Kategori</th>
-            <th class="center">Kusuma</th>
-            <th class="center">Ahmad</th>
-            <th class="center">Junaenah</th>
-            <th class="center">Fahrus</th>
-            <th class="center">Ade</th>
-            <th class="center">Dwi</th>
-            <th class="center">Sevina</th>
-            <th class="center">Total</th>
-            <th>Pemilih</th>
+            <th class="center" style="width: 110px;">Pilih</th>
+            <th class="center" style="width: 120px;">Status</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -263,234 +283,217 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQrqgsaszA_5NQKwLEYetOiexlxrZCmZ6A0AHpLbcNN34Wb6GyVRCR1TFmd2bgTHTD/exec";
-    const SHEET_ORDER = ["IDE OPD", "AKTIF OPD", "IDE UNIT", "AKTIF UNIT"];
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcabkVtOR-MVFa8bIMwb--pnD9ilIQHEOk0tE9lV7On32gNatzSoM96p_-8KGlh1pbUQ/exec";
 
-    let activeSheet = "IDE OPD";
-    let allSheetsData = {};
-    let reviewers = [
-      "Dr. Kusuma Adi Achmad, ST.,MT",
-      "Ahmad Ilyas",
-      "Junaenah, S.AP., M.M",
-      "Fahrus Salis",
-      "Ade Asep Syarifudin",
-      "Dwi Agustina, S.Pd.,M.Pd.B.I., PhD",
-      "Sevina Mahardini, ST.,MT.,M.Sc"
-    ];
-    let rows = [];
-    let chartInovasi, chartPenilai;
-
-    function getTotalSuara(item) {
-      return item.votes.reduce((a, b) => a + b, 0);
-    }
-
-    function getPemilih(item) {
-      const names = reviewers.filter((_, idx) => item.votes[idx] === 1);
-      return names.length ? names.join(", ") : "-";
-    }
-
-    function buildActiveView() {
-      if (activeSheet === "SEMUA") {
-        let combined = [];
-        SHEET_ORDER.forEach(name => {
-          const s = allSheetsData[name];
-          if (s && Array.isArray(s.rows)) {
-            if (s.reviewers && s.reviewers.length === 7 && s.reviewers.some(Boolean)) {
-              reviewers = s.reviewers;
-            }
-            s.rows.forEach(r => combined.push({ ...r, kat: r.kat || name }));
-          }
-        });
-        rows = combined;
-      } else {
-        const s = allSheetsData[activeSheet] || { rows: [], reviewers: reviewers };
-        if (s.reviewers && s.reviewers.length === 7 && s.reviewers.some(Boolean)) {
-          reviewers = s.reviewers;
-        }
-        rows = Array.isArray(s.rows) ? s.rows : [];
-      }
-
-      document.getElementById("kpiSheetLabel").textContent = `Sheet: ${activeSheet}`;
-      document.getElementById("tablePanelTitle").textContent = `Tabel Rekapan — ${activeSheet}`;
-      renderTable();
-    }
-
-    window.selectSheet = function(sheetName) {
-      activeSheet = sheetName;
-      document.querySelectorAll("#sheetTabs .tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.getAttribute("data-sheet") === sheetName);
-      });
-      buildActiveView();
+    const JURI_ALLOWED = {
+      1: ["AKTIF OPD", "AKTIF UNIT"],
+      2: ["AKTIF OPD", "AKTIF UNIT"],
+      3: ["AKTIF OPD", "AKTIF UNIT"],
+      4: ["IDE OPD", "IDE UNIT"],
+      5: ["IDE OPD", "IDE UNIT"],
+      6: ["IDE OPD", "IDE UNIT"],
+      7: ["AKTIF OPD", "AKTIF UNIT", "IDE OPD", "IDE UNIT"]
     };
 
-    function updateKPIs() {
-      const totalSuara = rows.reduce((sum, r) => sum + getTotalSuara(r), 0);
-      const terpilih = rows.filter(r => getTotalSuara(r) > 0).length;
-      const maxSuara = rows.length ? Math.max(...rows.map(r => getTotalSuara(r))) : 0;
-      const topItems = rows.filter(r => getTotalSuara(r) === maxSuara && maxSuara > 0);
+    let currentJuriId = 1;
+    let allowedSheets = JURI_ALLOWED[1];
+    let activeSheet = allowedSheets[0];
+    let sheetsPayload = {};
+    let isSaving = false;
 
-      document.getElementById("kpiTotalInovasi").textContent = rows.length;
-      document.getElementById("kpiTotalSuara").textContent = totalSuara;
-      document.getElementById("kpiTerpilih").textContent = terpilih;
-      document.getElementById("kpiTertinggi").textContent = maxSuara > 0 ? maxSuara : "0";
-      document.getElementById("kpiTertinggiNama").textContent =
-        topItems.length > 0 ? topItems.map(i => i.nama).join(", ") : "Belum ada suara masuk";
-      document.getElementById("statusBadge").textContent = `● Live • ${activeSheet} (${rows.length})`;
-    }
+    function renderTabs() {
+      const tabsEl = document.getElementById("sheetTabs");
+      tabsEl.innerHTML = "";
 
-    function renderCharts() {
-      const labels = rows.map(r => r.nama.length > 22 ? r.nama.slice(0, 22) + "…" : r.nama);
-      const suaraData = rows.map(r => getTotalSuara(r));
-      const shortNames = reviewers.map(name => name.replace(/^Dr\.\s*/i, "").split(" ")[0]);
-      const penilaiCounts = reviewers.map((_, idx) =>
-        rows.reduce((sum, r) => sum + (r.votes[idx] ? 1 : 0), 0)
-      );
-
-      if (chartInovasi) chartInovasi.destroy();
-      chartInovasi = new Chart(document.getElementById("chartInovasi"), {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: "Total Suara",
-            data: suaraData,
-            backgroundColor: "#b91c1c",
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 30 } },
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
-          }
-        }
-      });
-
-      if (chartPenilai) chartPenilai.destroy();
-      chartPenilai = new Chart(document.getElementById("chartPenilai"), {
-        type: "bar",
-        data: {
-          labels: shortNames,
-          datasets: [{
-            label: "Inovasi Dipilih",
-            data: penilaiCounts,
-            backgroundColor: "#2563eb",
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { ticks: { font: { size: 11 } } },
-            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
-          }
-        }
-      });
-    }
-
-    function renderTable() {
-      const q = document.getElementById("searchInput").value.toLowerCase().trim();
-      const sortBy = document.getElementById("sortSelect").value;
-
-      let filtered = rows.filter(item => {
-        const pemilihStr = getPemilih(item).toLowerCase();
-        return (
-          item.nama.toLowerCase().includes(q) ||
-          item.opd.toLowerCase().includes(q) ||
-          item.kat.toLowerCase().includes(q) ||
-          pemilihStr.includes(q)
-        );
-      });
-
-      if (sortBy === "suara_desc") {
-        filtered.sort((a, b) => getTotalSuara(b) - getTotalSuara(a));
-      } else if (sortBy === "nama_asc") {
-        filtered.sort((a, b) => a.nama.localeCompare(b.nama, "id"));
-      } else if (sortBy === "opd_asc") {
-        filtered.sort((a, b) => a.opd.localeCompare(b.opd, "id"));
+      if (!allowedSheets.includes(activeSheet)) {
+        activeSheet = allowedSheets[0];
       }
+
+      allowedSheets.forEach(sheetName => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab-btn" + (sheetName === activeSheet ? " active" : "");
+        btn.textContent = sheetName;
+        btn.onclick = () => {
+          activeSheet = sheetName;
+          renderTabs();
+          renderView();
+        };
+        tabsEl.appendChild(btn);
+      });
+
+      document.getElementById("juriScopeText").textContent =
+        "Kategori Juri: " + allowedSheets.join(" & ");
+    }
+
+    function getCurrentRows() {
+      const s = sheetsPayload[activeSheet];
+      return s && Array.isArray(s.rows) ? s.rows : [];
+    }
+
+    function updateKPIs(rows) {
+      const total = rows.length;
+      const picked = rows.filter(r => Boolean(r.checked)).length;
+      const unpicked = total - picked;
+
+      document.getElementById("kpiTotalInovasi").textContent = total;
+      document.getElementById("kpiSheetLabel").textContent = "Tab: " + activeSheet;
+      document.getElementById("kpiDipilih").textContent = picked;
+      document.getElementById("kpiBelum").textContent = unpicked;
+    }
+
+    window.onToggleItem = async function(sheetRow, isChecked) {
+      const errBox = document.getElementById("errorBanner");
+      const saveBadge = document.getElementById("saveStatusBadge");
+      const rows = getCurrentRows();
+      const target = rows.find(r => r.sheetRow === sheetRow);
+      const prevState = target ? Boolean(target.checked) : !isChecked;
+
+      if (target) {
+        target.checked = isChecked;
+      }
+      renderView();
+
+      try {
+        isSaving = true;
+        saveBadge.textContent = "Menyimpan...";
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            juriId: currentJuriId,
+            sheetName: activeSheet,
+            sheetRow: sheetRow,
+            checked: isChecked
+          })
+        });
+        const json = await res.json();
+        if (!json.ok) {
+          throw new Error(json.error || "Gagal menyimpan perubahan");
+        }
+        errBox.style.display = "none";
+        saveBadge.textContent = "✓ Tersimpan";
+      } catch (err) {
+        if (target) target.checked = prevState;
+        renderView();
+        errBox.style.display = "block";
+        errBox.textContent = "Gagal menyimpan centang ke Google Sheets: " + err.message;
+        saveBadge.textContent = "⚠ Gagal Simpan";
+      } finally {
+        isSaving = false;
+      }
+    };
+
+    function renderView() {
+      const rows = getCurrentRows();
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      const filterVal = document.getElementById("filterSelect").value;
+      const juriLabel = document.getElementById("juriSelect").selectedOptions[0].text;
+
+      document.getElementById("tablePanelTitle").textContent =
+        `${juriLabel} — ${activeSheet}`;
+
+      const filtered = rows.filter(item => {
+        const matchText =
+          item.nama.toLowerCase().includes(q) ||
+          item.opd.toLowerCase().includes(q);
+        if (!matchText) return false;
+        if (filterVal === "picked") return Boolean(item.checked);
+        if (filterVal === "unpicked") return !Boolean(item.checked);
+        return true;
+      });
 
       const tbody = document.getElementById("tableBody");
       tbody.innerHTML = "";
 
       filtered.forEach((item, idx) => {
-        const total = getTotalSuara(item);
+        const checked = Boolean(item.checked);
         const tr = document.createElement("tr");
-        const checksHtml = item.votes.map(v => `
-          <td class="center">
-            ${v ? '<span class="check-yes">✔</span>' : '<span class="check-no">☐</span>'}
-          </td>
-        `).join("");
+        if (checked) tr.className = "row-selected";
 
         tr.innerHTML = `
           <td>${idx + 1}</td>
           <td><strong>${item.nama}</strong></td>
           <td>${item.opd}</td>
-          <td class="center"><span class="pill-cat">${item.kat}</span></td>
-          ${checksHtml}
-          <td class="center"><span class="score-pill ${total >= 3 ? "score-high" : ""}">${total}</span></td>
-          <td>${getPemilih(item)}</td>
+          <td class="center">
+            <input
+              type="checkbox"
+              class="vote-check"
+              ${checked ? "checked" : ""}
+              onchange="onToggleItem(${item.sheetRow}, this.checked)"
+            />
+          </td>
+          <td class="center">
+            <span class="status-pill ${checked ? "picked" : ""}">
+              ${checked ? "✔ Dipilih" : "Belum"}
+            </span>
+          </td>
         `;
         tbody.appendChild(tr);
       });
 
-      const perReviewerTotals = reviewers.map((_, rIdx) =>
-        rows.reduce((sum, r) => sum + (r.votes[rIdx] ? 1 : 0), 0)
-      );
-      const grandTotal = rows.reduce((sum, r) => sum + getTotalSuara(r), 0);
-
+      const totalPickedAll = rows.filter(r => Boolean(r.checked)).length;
       document.getElementById("footerRow").innerHTML = `
-        <td colspan="4">TOTAL INOVASI YANG DIPILIH</td>
-        ${perReviewerTotals.map(t => `<td class="center">${t}</td>`).join("")}
-        <td class="center">${grandTotal}</td>
-        <td>-</td>
+        <td colspan="3">TOTAL INOVASI YANG DIPILIH (${activeSheet})</td>
+        <td class="center">${totalPickedAll}</td>
+        <td class="center">dari ${rows.length}</td>
       `;
 
-      updateKPIs();
-      renderCharts();
+      updateKPIs(rows);
     }
 
-    async function loadLiveData() {
+    async function loadJuriData() {
+      if (isSaving) return;
       const errBox = document.getElementById("errorBanner");
+      const statusBadge = document.getElementById("statusBadge");
+
       if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("TEMPEL_URL")) {
         errBox.style.display = "block";
-        errBox.textContent = "URL Apps Script belum diisi. Ganti tulisan TEMPEL_URL_WEB_APP_ANDA_DI_SINI dengan URL /exec dari Apps Script.";
+        errBox.textContent = "URL Apps Script belum diisi. Ganti TEMPEL_URL_WEB_APP_BARU_ANDA dengan URL /exec dari Apps Script.";
         return;
       }
 
       try {
-        document.getElementById("statusBadge").textContent = "Menyinkronkan...";
-        const res = await fetch(APPS_SCRIPT_URL);
+        statusBadge.textContent = "Memuat data...";
+        const url = `${APPS_SCRIPT_URL}?juriId=${encodeURIComponent(currentJuriId)}&_t=${Date.now()}`;
+        const res = await fetch(url);
         const json = await res.json();
 
         if (json.error) {
           throw new Error(json.error);
         }
 
+        if (json.juri && Array.isArray(json.juri.allowedSheets) && json.juri.allowedSheets.length) {
+          allowedSheets = json.juri.allowedSheets;
+        }
+        sheetsPayload = json.sheets || {};
         errBox.style.display = "none";
-        allSheetsData = json.sheets || {};
+        statusBadge.textContent = `● Terhubung • Juri ${currentJuriId}`;
         document.getElementById("lastUpdateText").textContent =
-          `Terhubung ke 4 Sheet Google Sheets • Pembaruan terakhir: ${json.updatedAt || "-"} (Auto-refresh 15 detik)`;
-        buildActiveView();
+          `Terhubung ke spreadsheet juri • Pembaruan terakhir: ${json.updatedAt || "-"}`;
+
+        renderTabs();
+        renderView();
       } catch (err) {
         errBox.style.display = "block";
-        errBox.textContent = "Gagal mengambil data dari Google Sheets: " + err.message;
-        document.getElementById("statusBadge").textContent = "⚠ Gagal Terhubung";
+        errBox.textContent = "Gagal mengambil data juri: " + err.message;
+        statusBadge.textContent = "⚠ Gagal Terhubung";
       }
     }
 
-    document.getElementById("searchInput").addEventListener("input", renderTable);
-    document.getElementById("sortSelect").addEventListener("change", renderTable);
+    window.onJuriChange = function() {
+      currentJuriId = Number(document.getElementById("juriSelect").value) || 1;
+      allowedSheets = JURI_ALLOWED[currentJuriId] || ["AKTIF OPD", "AKTIF UNIT"];
+      activeSheet = allowedSheets[0];
+      renderTabs();
+      loadJuriData();
+    };
 
-    loadLiveData();
-    setInterval(loadLiveData, 15000);
+    document.getElementById("searchInput").addEventListener("input", renderView);
+    document.getElementById("filterSelect").addEventListener("change", renderView);
+
+    renderTabs();
+    loadJuriData();
   </script>
 </body>
 </html>
