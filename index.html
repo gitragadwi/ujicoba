@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Rekapitulasi Festival Inovasi</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #991b1b;
+      --primary-soft: #fef2f2;
+      --accent: #2563eb;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 20px 24px; width: 100%; }
+    .header {
+      background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+      color: #fff;
+      padding: 20px 24px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .header h1 { font-size: 20px; font-weight: 700; }
+    .header p { font-size: 13px; opacity: 0.92; margin-top: 4px; }
+    .status-box { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      background: rgba(255,255,255,0.18);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .btn-refresh {
+      background: #ffffff;
+      color: #991b1b;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-refresh:hover { background: #fee2e2; }
+
+    .sheet-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab-btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab-btn:hover { border-color: #fca5a5; background: #fff5f5; }
+    .tab-btn.active {
+      background: #991b1b;
+      color: #ffffff;
+      border-color: #991b1b;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .kpi-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .kpi-value { font-size: 26px; font-weight: 700; margin-top: 4px; color: var(--text); }
+    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 850px) {
+      .charts-grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+    }
+    .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .chart-box { position: relative; height: 240px; width: 100%; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    input[type="text"], select {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      background: #fff;
+      color: var(--text);
+    }
+    .table-wrap { overflow-x: auto; max-height: 620px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: #f1f5f9; font-weight: 700; position: sticky; top: 0; z-index: 1; }
+    th.center, td.center { text-align: center; }
+    tr:hover td { background: #fafafa; }
+    .pill-cat {
+      background: #eff6ff;
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .check-yes { color: #16a34a; font-weight: 700; font-size: 15px; }
+    .check-no { color: #cbd5e1; font-size: 14px; }
+    .score-pill {
+      display: inline-block;
+      min-width: 26px;
+      text-align: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      background: #f1f5f9;
+    }
+    .score-high { background: #dcfce7; color: #166534; }
+    .footer-row td { background: #fef2f2; font-weight: 700; color: var(--primary); position: sticky; bottom: 0; }
+    .error-banner {
+      display: none;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      padding: 12px 14px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Dashboard Rekapitulasi Festival Inovasi</h1>
+      <p id="lastUpdateText">Menghubungkan ke 4 sheet di Google Sheets...</p>
+    </div>
+    <div class="status-box">
+      <span class="badge" id="statusBadge">Memuat data...</span>
+      <button class="btn-refresh" type="button" onclick="loadLiveData()">↻ Refresh Sekarang</button>
+    </div>
+  </div>
+
+  <div class="sheet-tabs" id="sheetTabs">
+    <button class="tab-btn active" data-sheet="IDE OPD" onclick="selectSheet('IDE OPD')">IDE OPD</button>
+    <button class="tab-btn" data-sheet="AKTIF OPD" onclick="selectSheet('AKTIF OPD')">AKTIF OPD</button>
+    <button class="tab-btn" data-sheet="IDE UNIT" onclick="selectSheet('IDE UNIT')">IDE UNIT</button>
+    <button class="tab-btn" data-sheet="AKTIF UNIT" onclick="selectSheet('AKTIF UNIT')">AKTIF UNIT</button>
+    <button class="tab-btn" data-sheet="SEMUA" onclick="selectSheet('SEMUA')">Semua Sheet</button>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Total Inovasi</div>
+      <div class="kpi-value" id="kpiTotalInovasi">-</div>
+      <div class="kpi-sub" id="kpiSheetLabel">Sheet: IDE OPD</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total Suara Masuk</div>
+      <div class="kpi-value" id="kpiTotalSuara">-</div>
+      <div class="kpi-sub">Akumulasi seluruh penilai</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Inovasi Terpilih (&ge;1 Suara)</div>
+      <div class="kpi-value" id="kpiTerpilih">-</div>
+      <div class="kpi-sub">Sudah mendapatkan suara</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Suara Tertinggi</div>
+      <div class="kpi-value" id="kpiTertinggi">-</div>
+      <div class="kpi-sub" id="kpiTertinggiNama">Menunggu data...</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="panel">
+      <div class="panel-title">Perolehan Suara per Inovasi</div>
+      <div class="chart-box"><canvas id="chartInovasi"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Jumlah Inovasi Dipilih per Penilai</div>
+      <div class="chart-box"><canvas id="chartPenilai"></canvas></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title" id="tablePanelTitle">Tabel Rekapan — IDE OPD</div>
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Cari nama inovasi, OPD/unit, atau pemilih..." style="min-width: 260px; flex: 1;" />
+      <select id="sortSelect">
+        <option value="default">Urutan Sesuai Spreadsheet</option>
+        <option value="suara_desc">Suara Tertinggi ke Terendah</option>
+        <option value="nama_asc">Nama Inovasi (A-Z)</option>
+        <option value="opd_asc">OPD / Unit (A-Z)</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>No</th>
+            <th>Nama Inovasi</th>
+            <th>OPD / Unit</th>
+            <th class="center">Kategori</th>
+            <th class="center">Kusuma</th>
+            <th class="center">Ahmad</th>
+            <th class="center">Junaenah</th>
+            <th class="center">Fahrus</th>
+            <th class="center">Ade</th>
+            <th class="center">Dwi</th>
+            <th class="center">Sevina</th>
+            <th class="center">Total</th>
+            <th>Pemilih</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+        <tfoot>
+          <tr class="footer-row" id="footerRow"></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxQrqgsaszA_5NQKwLEYetOiexlxrZCmZ6A0AHpLbcNN34Wb6GyVRCR1TFmd2bgTHTD/exec";
+    const SHEET_ORDER = ["IDE OPD", "AKTIF OPD", "IDE UNIT", "AKTIF UNIT"];
+
+    let activeSheet = "IDE OPD";
+    let allSheetsData = {};
+    let reviewers = [
+      "Dr. Kusuma Adi Achmad, ST.,MT",
+      "Ahmad Ilyas",
+      "Junaenah, S.AP., M.M",
+      "Fahrus Salis",
+      "Ade Asep Syarifudin",
+      "Dwi Agustina, S.Pd.,M.Pd.B.I., PhD",
+      "Sevina Mahardini, ST.,MT.,M.Sc"
+    ];
+    let rows = [];
+    let chartInovasi, chartPenilai;
+
+    function getTotalSuara(item) {
+      return item.votes.reduce((a, b) => a + b, 0);
+    }
+
+    function getPemilih(item) {
+      const names = reviewers.filter((_, idx) => item.votes[idx] === 1);
+      return names.length ? names.join(", ") : "-";
+    }
+
+    function buildActiveView() {
+      if (activeSheet === "SEMUA") {
+        let combined = [];
+        SHEET_ORDER.forEach(name => {
+          const s = allSheetsData[name];
+          if (s && Array.isArray(s.rows)) {
+            if (s.reviewers && s.reviewers.length === 7 && s.reviewers.some(Boolean)) {
+              reviewers = s.reviewers;
+            }
+            s.rows.forEach(r => combined.push({ ...r, kat: r.kat || name }));
+          }
+        });
+        rows = combined;
+      } else {
+        const s = allSheetsData[activeSheet] || { rows: [], reviewers: reviewers };
+        if (s.reviewers && s.reviewers.length === 7 && s.reviewers.some(Boolean)) {
+          reviewers = s.reviewers;
+        }
+        rows = Array.isArray(s.rows) ? s.rows : [];
+      }
+
+      document.getElementById("kpiSheetLabel").textContent = `Sheet: ${activeSheet}`;
+      document.getElementById("tablePanelTitle").textContent = `Tabel Rekapan — ${activeSheet}`;
+      renderTable();
+    }
+
+    window.selectSheet = function(sheetName) {
+      activeSheet = sheetName;
+      document.querySelectorAll("#sheetTabs .tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-sheet") === sheetName);
+      });
+      buildActiveView();
+    };
+
+    function updateKPIs() {
+      const totalSuara = rows.reduce((sum, r) => sum + getTotalSuara(r), 0);
+      const terpilih = rows.filter(r => getTotalSuara(r) > 0).length;
+      const maxSuara = rows.length ? Math.max(...rows.map(r => getTotalSuara(r))) : 0;
+      const topItems = rows.filter(r => getTotalSuara(r) === maxSuara && maxSuara > 0);
+
+      document.getElementById("kpiTotalInovasi").textContent = rows.length;
+      document.getElementById("kpiTotalSuara").textContent = totalSuara;
+      document.getElementById("kpiTerpilih").textContent = terpilih;
+      document.getElementById("kpiTertinggi").textContent = maxSuara > 0 ? maxSuara : "0";
+      document.getElementById("kpiTertinggiNama").textContent =
+        topItems.length > 0 ? topItems.map(i => i.nama).join(", ") : "Belum ada suara masuk";
+      document.getElementById("statusBadge").textContent = `● Live • ${activeSheet} (${rows.length})`;
+    }
+
+    function renderCharts() {
+      const labels = rows.map(r => r.nama.length > 22 ? r.nama.slice(0, 22) + "…" : r.nama);
+      const suaraData = rows.map(r => getTotalSuara(r));
+      const shortNames = reviewers.map(name => name.replace(/^Dr\.\s*/i, "").split(" ")[0]);
+      const penilaiCounts = reviewers.map((_, idx) =>
+        rows.reduce((sum, r) => sum + (r.votes[idx] ? 1 : 0), 0)
+      );
+
+      if (chartInovasi) chartInovasi.destroy();
+      chartInovasi = new Chart(document.getElementById("chartInovasi"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "Total Suara",
+            data: suaraData,
+            backgroundColor: "#b91c1c",
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 30 } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
+          }
+        }
+      });
+
+      if (chartPenilai) chartPenilai.destroy();
+      chartPenilai = new Chart(document.getElementById("chartPenilai"), {
+        type: "bar",
+        data: {
+          labels: shortNames,
+          datasets: [{
+            label: "Inovasi Dipilih",
+            data: penilaiCounts,
+            backgroundColor: "#2563eb",
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { font: { size: 11 } } },
+            y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      const q = document.getElementById("searchInput").value.toLowerCase().trim();
+      const sortBy = document.getElementById("sortSelect").value;
+
+      let filtered = rows.filter(item => {
+        const pemilihStr = getPemilih(item).toLowerCase();
+        return (
+          item.nama.toLowerCase().includes(q) ||
+          item.opd.toLowerCase().includes(q) ||
+          item.kat.toLowerCase().includes(q) ||
+          pemilihStr.includes(q)
+        );
+      });
+
+      if (sortBy === "suara_desc") {
+        filtered.sort((a, b) => getTotalSuara(b) - getTotalSuara(a));
+      } else if (sortBy === "nama_asc") {
+        filtered.sort((a, b) => a.nama.localeCompare(b.nama, "id"));
+      } else if (sortBy === "opd_asc") {
+        filtered.sort((a, b) => a.opd.localeCompare(b.opd, "id"));
+      }
+
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      filtered.forEach((item, idx) => {
+        const total = getTotalSuara(item);
+        const tr = document.createElement("tr");
+        const checksHtml = item.votes.map(v => `
+          <td class="center">
+            ${v ? '<span class="check-yes">✔</span>' : '<span class="check-no">☐</span>'}
+          </td>
+        `).join("");
+
+        tr.innerHTML = `
+          <td>${idx + 1}</td>
+          <td><strong>${item.nama}</strong></td>
+          <td>${item.opd}</td>
+          <td class="center"><span class="pill-cat">${item.kat}</span></td>
+          ${checksHtml}
+          <td class="center"><span class="score-pill ${total >= 3 ? "score-high" : ""}">${total}</span></td>
+          <td>${getPemilih(item)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const perReviewerTotals = reviewers.map((_, rIdx) =>
+        rows.reduce((sum, r) => sum + (r.votes[rIdx] ? 1 : 0), 0)
+      );
+      const grandTotal = rows.reduce((sum, r) => sum + getTotalSuara(r), 0);
+
+      document.getElementById("footerRow").innerHTML = `
+        <td colspan="4">TOTAL INOVASI YANG DIPILIH</td>
+        ${perReviewerTotals.map(t => `<td class="center">${t}</td>`).join("")}
+        <td class="center">${grandTotal}</td>
+        <td>-</td>
+      `;
+
+      updateKPIs();
+      renderCharts();
+    }
+
+    async function loadLiveData() {
+      const errBox = document.getElementById("errorBanner");
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.includes("TEMPEL_URL")) {
+        errBox.style.display = "block";
+        errBox.textContent = "URL Apps Script belum diisi. Ganti tulisan TEMPEL_URL_WEB_APP_ANDA_DI_SINI dengan URL /exec dari Apps Script.";
+        return;
+      }
+
+      try {
+        document.getElementById("statusBadge").textContent = "Menyinkronkan...";
+        const res = await fetch(APPS_SCRIPT_URL);
+        const json = await res.json();
+
+        if (json.error) {
+          throw new Error(json.error);
+        }
+
+        errBox.style.display = "none";
+        allSheetsData = json.sheets || {};
+        document.getElementById("lastUpdateText").textContent =
+          `Terhubung ke 4 Sheet Google Sheets • Pembaruan terakhir: ${json.updatedAt || "-"} (Auto-refresh 15 detik)`;
+        buildActiveView();
+      } catch (err) {
+        errBox.style.display = "block";
+        errBox.textContent = "Gagal mengambil data dari Google Sheets: " + err.message;
+        document.getElementById("statusBadge").textContent = "⚠ Gagal Terhubung";
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderTable);
+    document.getElementById("sortSelect").addEventListener("change", renderTable);
+
+    loadLiveData();
+    setInterval(loadLiveData, 15000);
+  </script>
+</body>
+</html>
